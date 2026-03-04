@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Git: Commit vs Push (Ejemplo Visual)</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --card:#0f1a33;
+      --text:#e9eefc;
+      --muted:#9fb0d0;
+      --line:#263458;
+      --blue:#4aa3ff;
+      --red:#ff5c5c;
+      --green:#2ee59d;
+      --yellow:#ffd166;
+      --shadow: 0 12px 30px rgba(0,0,0,.35);
+      --radius: 18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Noto Sans", Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background: radial-gradient(1200px 600px at 20% -10%, rgba(74,163,255,.25), transparent 60%),
+                  radial-gradient(900px 500px at 90% 10%, rgba(255,92,92,.18), transparent 55%),
+                  var(--bg);
+      color: var(--text);
+      line-height: 1.4;
+    }
+    header{
+      padding: 28px 18px 10px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    h1{
+      margin:0 0 6px;
+      font-size: clamp(22px, 3vw, 34px);
+      letter-spacing:.2px;
+    }
+    .sub{
+      margin:0;
+      color: var(--muted);
+      font-size: clamp(14px, 1.6vw, 16px);
+    }
+    .wrap{
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 18px;
+      display: grid;
+      gap: 16px;
+    }
+    .grid{
+      display:grid;
+      gap:16px;
+      grid-template-columns: 1fr;
+    }
+    @media(min-width: 960px){
+      .grid{ grid-template-columns: 1fr 1fr; }
+    }
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card .head{
+      padding: 16px 16px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .badge{
+      font-weight: 700;
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      white-space:nowrap;
+    }
+    .badge.blue{ border-color: rgba(74,163,255,.5); color:#cfe6ff; background: rgba(74,163,255,.10);}
+    .badge.red{ border-color: rgba(255,92,92,.5); color:#ffd6d6; background: rgba(255,92,92,.10);}
+    .badge.green{ border-color: rgba(46,229,157,.5); color:#d4ffef; background: rgba(46,229,157,.10);}
+    .body{
+      padding: 16px;
+    }
+    .row{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom: 10px;
+    }
+    .pill{
+      padding: 8px 10px;
+      border-radius: 12px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(15,26,51,.55);
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .pill strong{ color: var(--text); }
+    .diagram{
+      padding: 14px;
+      border-top: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.14);
+    }
+
+    /* Timeline */
+    .timeline{
+      position: relative;
+      padding: 10px 6px 16px;
+    }
+    .line{
+      height: 6px;
+      background: var(--line);
+      border-radius: 999px;
+      position: relative;
+      overflow:hidden;
+    }
+    .line.blue::after{
+      content:"";
+      position:absolute; left:0; top:0; bottom:0;
+      width: 100%;
+      background: linear-gradient(90deg, rgba(74,163,255,.85), rgba(74,163,255,.35));
+    }
+    .line.red::after{
+      content:"";
+      position:absolute; left:0; top:0; bottom:0;
+      width: 100%;
+      background: linear-gradient(90deg, rgba(255,92,92,.85), rgba(255,92,92,.35));
+    }
+
+    .nodes{
+      display:flex;
+      justify-content:space-between;
+      margin-top: 12px;
+      gap: 8px;
+    }
+    .node{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      text-align:center;
+      gap:6px;
+    }
+    .dot{
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 0 0 5px rgba(255,255,255,.08);
+    }
+    .dot.blue{ background: var(--blue); }
+    .dot.red{ background: var(--red); }
+    .dot.green{ background: var(--green); }
+
+    .label{
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .label b{ color: var(--text); }
+
+    /* Cloud vs Local blocks */
+    .blocks{
+      display:grid;
+      gap: 10px;
+      grid-template-columns: 1fr;
+      margin-top: 14px;
+    }
+    @media(min-width: 520px){
+      .blocks{ grid-template-columns: 1fr 1fr; }
+    }
+    .block{
+      border-radius: 14px;
+      padding: 12px;
+      border: 1px dashed rgba(255,255,255,.18);
+      background: rgba(15,26,51,.35);
+      min-height: 92px;
+    }
+    .block h3{
+      margin:0 0 6px;
+      font-size: 14px;
+    }
+    .block p{
+      margin:0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* Footer note */
+    .note{
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .note b{ color: var(--text); }
+
+    /* Small CTA */
+    .cta{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top: 12px;
+    }
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      font-weight: 700;
+      font-size: 13px;
+      text-decoration:none;
+      cursor:pointer;
+      user-select:none;
+    }
+    .btn:hover{ background: rgba(255,255,255,.10); }
+    .btn.blue{ border-color: rgba(74,163,255,.5); }
+    .btn.red{ border-color: rgba(255,92,92,.5); }
+    .btn.green{ border-color: rgba(46,229,157,.5); }
+
+    /* Toggle extra explanation */
+    details{
+      margin-top: 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.12);
+      padding: 10px 12px;
+    }
+    summary{
+      cursor:pointer;
+      font-weight: 800;
+      color: var(--text);
+    }
+    details p{ margin: 10px 0 0; color: var(--muted); font-size: 13px; }
+    code{
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.10);
+      padding: 2px 6px;
+      border-radius: 8px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+      color: #eaf2ff;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Ejemplo Visual: Commit vs Push (Dos Ramas)</h1>
+    <p class="sub">Objetivo: entender que <b>commit</b> guarda cambios localmente y <b>push</b> los publica en la nube (GitHub).</p>
+  </header>
+
+  <main class="wrap">
+    <section class="grid">
+
+      <!-- Rama A: Commit SIN Push -->
+      <article class="card">
+        <div class="head">
+          <div>
+            <div class="badge blue">Rama A</div>
+            <div style="margin-top:6px;font-weight:800;">Commit SIN Push</div>
+          </div>
+          <div class="badge">Solo local</div>
+        </div>
+
+        <div class="body">
+          <div class="row">
+            <div class="pill"><strong>Qué pasa:</strong> haces commits, pero <b>nadie</b> los ve.</div>
+            <div class="pill"><strong>Riesgo:</strong> pasa el tiempo y te quedas “atrás”.</div>
+          </div>
+        </div>
+
+        <div class="diagram">
+          <div class="timeline">
+            <div class="line blue"></div>
+            <div class="nodes">
+              <div class="node">
+                <div class="dot blue"></div>
+                <div class="label"><b>Commit 1</b><br>Inicio</div>
+              </div>
+              <div class="node">
+                <div class="dot blue"></div>
+                <div class="label"><b>Commit 2</b><br>Cambio</div>
+              </div>
+              <div class="node">
+                <div class="dot blue"></div>
+                <div class="label"><b>Commit 3</b><br>Más cambios</div>
+              </div>
+              <div class="node">
+                <div class="dot blue"></div>
+                <div class="label"><b>Pasa el tiempo…</b><br>sin push</div>
+              </div>
+            </div>
+
+            <div class="blocks">
+              <div class="block">
+                <h3>📍 Local (tu PC)</h3>
+                <p>Los commits quedan guardados aquí. Todo bien, pero <b>solo tú</b> los tienes.</p>
+              </div>
+              <div class="block">
+                <h3>☁️ Nube (GitHub)</h3>
+                <p>No recibe nada todavía porque <b>no hubo push</b>.</p>
+              </div>
+            </div>
+
+            <div class="note">
+              <b>Idea clave:</b> Commit ≠ Compartir. Si no hay <b>push</b>, el historial en GitHub no se actualiza.
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Rama B: Commit CON Push -->
+      <article class="card">
+        <div class="head">
+          <div>
+            <div class="badge red">Rama B</div>
+            <div style="margin-top:6px;font-weight:800;">Commit + Push</div>
+          </div>
+          <div class="badge green">Se ve en GitHub</div>
+        </div>
+
+        <div class="body">
+          <div class="row">
+            <div class="pill"><strong>Qué pasa:</strong> haces commits y luego <b>push</b>.</div>
+            <div class="pill"><strong>Resultado:</strong> el equipo ve tus cambios.</div>
+          </div>
+        </div>
+
+        <div class="diagram">
+          <div class="timeline">
+            <div class="line red"></div>
+            <div class="nodes">
+              <div class="node">
+                <div class="dot red"></div>
+                <div class="label"><b>Commit 1</b><br>Inicio</div>
+              </div>
+              <div class="node">
+                <div class="dot red"></div>
+                <div class="label"><b>Commit 2</b><br>Cambio</div>
+              </div>
+              <div class="node">
+                <div class="dot red"></div>
+                <div class="label"><b>Commit 3</b><br>Más cambios</div>
+              </div>
+              <div class="node">
+                <div class="dot green"></div>
+                <div class="label"><b>Push ✅</b><br>publicado</div>
+              </div>
+            </div>
+
+            <div class="blocks">
+              <div class="block">
+                <h3>📍 Local (tu PC)</h3>
+                <p>Primero se guardan commits aquí. Luego eliges cuándo publicar.</p>
+              </div>
+              <div class="block">
+                <h3>☁️ Nube (GitHub)</h3>
+                <p>Tras el <b>push</b>, GitHub registra los commits y el equipo los puede auditar.</p>
+              </div>
+            </div>
+
+            <div class="note">
+              <b>Idea clave:</b> Push = “subir/compartir”. El auditor ve el historial en GitHub porque <b>ya está publicado</b>.
+            </div>
+          </div>
+        </div>
+      </article>
+
+    </section>
+
+    <section class="card">
+      <div class="head">
+        <div style="font-weight:900;">Mini resumen</div>
+        <span class="badge">Para auditoría</span>
+      </div>
+      <div class="body">
+        <div class="row">
+          <span class="badge blue">Commit</span>
+          <div class="pill">Guarda cambios como “capítulos” <b>en tu PC</b>.</div>
+        </div>
+        <div class="row">
+          <span class="badge green">Push</span>
+          <div class="pill">Publica esos capítulos en <b>GitHub</b> para que otros los vean.</div>
+        </div>
+
+        <div class="cta">
+          <a class="btn blue" href="https://github.com" target="_blank" rel="noreferrer">Abrir GitHub</a>
+          <a class="btn green" href="#" onclick="alert('Tip: en GitHub, ve a: Repo → Commits. Ahí auditas el historial.'); return false;">¿Dónde audito?</a>
+        </div>
+
+        <details>
+          <summary>Si quieres conectar con consola.</summary>
+          <p>
+            GitHub Desktop o VS Code lo hacen visual, pero por debajo ejecutan comandos.
+            Ejemplo: <code>git commit</code> (guardar) y <code>git push</code> (publicar).
+          </p>
+        </details>
+      </div>
+    </section>
+
+  </main>
+</body>
+</html>
